@@ -684,35 +684,42 @@ open class KCFloatingActionButton: UIView {
     }
 
     internal func keyboardWillShow(_ notification: Notification) {
-        guard let keyboardSize: CGFloat = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size.height else {
-            return
-        }
+		guard let userInfo = notification.userInfo,
+			  let frameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue,
+			  let animationCurveValue = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber,
+			  let animationDurationValue = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? NSNumber else {
+				return
+		}
 
-        if isCustomFrame == false {
-            setRightBottomFrame(keyboardSize)
-        } else {
-            size = min(frame.size.width, frame.size.height)
-        }
-
-        UIView.animate(withDuration: 0.2, delay: 0, options: UIViewAnimationOptions(), animations: {
-            self.frame = CGRect(
-                x: UIScreen.main.bounds.width-self.size - self.paddingX,
-                y: UIScreen.main.bounds.height-self.size - keyboardSize - self.paddingY,
-                width: self.size,
-                height: self.size
-            )
-            }, completion: nil)
+		let frameEnd = frameEndValue.cgRectValue
+		let animationOptions = UIViewAnimationOptions(rawValue: UInt(animationCurveValue.intValue << 16))
+		let animationDuration = animationDurationValue.doubleValue
+        UIView.animate(withDuration: animationDuration, delay: 0, options: animationOptions, animations: {
+			if self.isCustomFrame == false {
+				self.setRightBottomFrame(frameEnd.height)
+			} else {
+				self.size = min(self.frame.size.width, self.frame.size.height)
+			}
+		}, completion: nil)
     }
 
     internal func keyboardWillHide(_ notification: Notification) {
-        UIView.animate(withDuration: 0.2, delay: 0, options: UIViewAnimationOptions(), animations: {
+		guard let userInfo = notification.userInfo,
+			  let animationCurveValue = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber,
+			  let animationDurationValue = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? NSNumber else
+		{
+				return
+		}
+
+		let animationOptions = UIViewAnimationOptions(rawValue: UInt(animationCurveValue.intValue << 16))
+		let animationDuration = animationDurationValue.doubleValue
+        UIView.animate(withDuration: animationDuration, delay: 0, options: animationOptions, animations: {
             if self.isCustomFrame == false {
                 self.setRightBottomFrame()
             } else {
                 self.size = min(self.frame.size.width, self.frame.size.height)
             }
-
-            }, completion: nil)
+		}, completion: nil)
     }
 }
 
